@@ -34,8 +34,10 @@ def _is_bilibili_url(url: str) -> bool:
 
 def download_video(url: str) -> tuple[str, str, Optional[float]]:
     ydl_opts = {
-        "format": "worstvideo[ext=mp4]/worstvideo/worst",
+        "format": "worstvideo[ext=mp4]+worstaudio[ext=m4a]/worstvideo+worstaudio/worst",
         "outtmpl": str(DOWNLOAD_DIR / "%(id)s.%(ext)s"),
+        "merge_output_format": "mp4",
+        "overwrites": True,
         "noplaylist": True,
         "retries": 3,
         "fragment_retries": 3,
