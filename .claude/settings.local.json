@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm -F server add:*)",
+      "Bash(pnpm -F server test)",
+      "Bash(pnpm:*)",
+      "Bash(mv:*)",
+      "Bash(find:*)",
+      "Bash(move:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "mcp__exa__web_search_exa",
+      "mcp__exa__crawling_exa",
+      "Bash(npx kill-port:*)",
+      "Skill(gitmoji)",
+      "Skill(gitmoji_tag)",
+      "Bash(go test:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

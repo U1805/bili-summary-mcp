@@ -1,0 +1,7 @@
+.venv/
+downloads/
+__pycache__/
+*.log
+*.md
+!AGENTS.md
+!README.md

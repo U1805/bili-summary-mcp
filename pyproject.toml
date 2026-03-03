@@ -1,0 +1,10 @@
+[project]
+name = "bili-summary-mcp"
+version = "0.1.0"
+description = "FastAPI service for Bilibili video ingest via yt-dlp"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.116.1",
+    "uvicorn[standard]==0.35.0",
+    "yt-dlp==2025.8.22",
+]
