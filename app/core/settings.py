@@ -7,6 +7,7 @@ import tomllib
 DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_SERVER_PORT = 8000
 DEFAULT_LOCAL_OPENAI_API_KEY = "local-qwen"
+DEFAULT_MCP_TIMEOUT_SECONDS = 300.0
 CONFIG_FILE_PATH = Path(__file__).resolve().parents[1] / "config.toml"
 
 
@@ -38,10 +39,16 @@ class ServerConfig:
 
 
 @dataclass(frozen=True)
+class MCPConfig:
+    timeout_seconds: float = DEFAULT_MCP_TIMEOUT_SECONDS
+
+
+@dataclass(frozen=True)
 class AppConfig:
     openai: OpenAIConfig
     qwen: QwenConfig
     server: ServerConfig
+    mcp: MCPConfig
     local_openai_base_url: str
     local_openai_api_key: str = DEFAULT_LOCAL_OPENAI_API_KEY
 
@@ -78,6 +85,14 @@ def _read_int(data: dict[str, Any], key: str, default: int) -> int:
         return default
 
 
+def _read_float(data: dict[str, Any], key: str, default: float) -> float:
+    value = data.get(key, default)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _load_raw_config() -> dict[str, Any]:
     if not CONFIG_FILE_PATH.exists():
         return {}
@@ -95,6 +110,7 @@ def get_settings() -> AppConfig:
     qwen_raw = _read_table(raw, "qwen")
     qwen_localapi_raw = _read_table(qwen_raw, "localapi")
     server_raw = _read_table(raw, "server")
+    mcp_raw = _read_table(raw, "mcp")
 
     openai = OpenAIConfig(
         base_url=_read_str(openai_raw, "base_url", DEFAULT_OPENAI_BASE_URL) or DEFAULT_OPENAI_BASE_URL,
@@ -109,6 +125,10 @@ def get_settings() -> AppConfig:
     parsed_port = _read_int(server_raw, "port", DEFAULT_SERVER_PORT)
     port = parsed_port if 1 <= parsed_port <= 65535 else DEFAULT_SERVER_PORT
     server = ServerConfig(port=port)
+    parsed_mcp_timeout = _read_float(mcp_raw, "timeout_seconds", DEFAULT_MCP_TIMEOUT_SECONDS)
+    mcp = MCPConfig(
+        timeout_seconds=parsed_mcp_timeout if parsed_mcp_timeout > 0 else DEFAULT_MCP_TIMEOUT_SECONDS
+    )
     default_local_openai_base_url = f"http://127.0.0.1:{server.port}/v1"
     local_base_url = _read_str(qwen_localapi_raw, "base_url", default_local_openai_base_url)
     local_api_key = _read_str(qwen_localapi_raw, "api_key", DEFAULT_LOCAL_OPENAI_API_KEY)
@@ -116,6 +136,7 @@ def get_settings() -> AppConfig:
         openai=openai,
         qwen=qwen,
         server=server,
+        mcp=mcp,
         local_openai_base_url=local_base_url or default_local_openai_base_url,
         local_openai_api_key=local_api_key or DEFAULT_LOCAL_OPENAI_API_KEY,
     )

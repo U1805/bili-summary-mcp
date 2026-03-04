@@ -20,6 +20,15 @@ Server port:
 port = 8000
 ```
 
+MCP timeout:
+
+```toml
+[mcp]
+# MCP tool timeout in seconds.
+# When timeout is reached, the server cancels the in-flight LLM request.
+timeout_seconds = 300
+```
+
 Mode 1: external OpenAI-compatible API
 
 ```toml
@@ -95,3 +104,4 @@ Common MCP config examples:
 ```
 
 If your `app/config.toml` sets a custom `[server].port`, replace `8000` accordingly.
+If your `app/config.toml` sets `[mcp].timeout_seconds`, MCP `summarize_video` will fail fast at that timeout and cancel the in-flight LLM request.

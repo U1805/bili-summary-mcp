@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 
+from app.core.logging import setup_logging
 from app.core.router import router as core_router
 from app.core.settings import get_settings
 from app.mcp import get_mcp_http_app, register_mcp_lifecycle
+
+setup_logging()
 
 app = FastAPI(title="bili-summary-mcp", version="0.1.0")
 app.include_router(core_router)
@@ -21,7 +24,7 @@ def run() -> None:
     import uvicorn
 
     cfg = get_settings()
-    uvicorn.run("app.main:app", host="0.0.0.0", port=cfg.server.port)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=cfg.server.port, log_config=None)
 
 
 if __name__ == "__main__":

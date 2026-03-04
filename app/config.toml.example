@@ -1,6 +1,11 @@
 [server]
 port = 8000
 
+[mcp]
+# MCP tool timeout in seconds.
+# When timeout is reached, the server cancels the in-flight LLM request.
+timeout_seconds = 300
+
 [openai]
 # Mode 1: Use an external OpenAI-compatible API.
 # base_url is optional and defaults to https://api.openai.com/v1
@@ -15,7 +20,7 @@ model_name = ""
 # This also overrides Mode 1 [openai] effective runtime config.
 email = ""
 password = ""
-model_name = ""
+model_name = "" # "qwen3.5-plus" for video only and "qwen3-omni-flash" for video with audio
 
 [qwen.localapi]
 # Optional local gateway overrides used when [qwen] is enabled.

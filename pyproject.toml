@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "FastAPI service for Bilibili video ingest via yt-dlp"
 requires-python = ">=3.12"
 dependencies = [
+    "colorlog>=6.10.1",
     "fastapi==0.116.1",
     "httpx>=0.28.1",
     "mcp>=1.26.0",

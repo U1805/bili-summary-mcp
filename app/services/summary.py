@@ -3,14 +3,21 @@ import mimetypes
 from pathlib import Path
 
 from fastapi import HTTPException
-from openai import APIConnectionError, APIStatusError, OpenAI
+from openai import APIConnectionError, APIStatusError, AsyncOpenAI
 
 from app.core.constants import DEFAULT_SUMMARY_PROMPT
-from app.core.utils import extract_summary_text
 from app.core.settings import get_settings
+from app.core.utils import extract_summary_text
+
+DEFAULT_LLM_REQUEST_TIMEOUT_SECONDS = 300.0
 
 
-def summarize_video(filepath: str, prompt: str | None) -> str:
+async def summarize_video(
+    filepath: str,
+    prompt: str | None,
+    *,
+    request_timeout_seconds: float = DEFAULT_LLM_REQUEST_TIMEOUT_SECONDS,
+) -> str:
     effective_openai = get_settings().effective_openai
     base_url = effective_openai.base_url
     api_key = effective_openai.api_key
@@ -36,15 +43,15 @@ def summarize_video(filepath: str, prompt: str | None) -> str:
 
     video_base64 = base64.b64encode(path.read_bytes()).decode("ascii")
     final_prompt = prompt or DEFAULT_SUMMARY_PROMPT
-    client = OpenAI(base_url=base_url, api_key=api_key)
+    client = AsyncOpenAI(base_url=base_url, api_key=api_key)
 
     try:
-        response = client.chat.completions.create(
+        response = await client.chat.completions.create(
             model=model_name,
             messages=[
                 {
                     "role": "system",
-                    "content": "你是一个专业的视频分析助手，请根据视频内容做准确总结。",
+                    "content": "你是一个专业的视频分析助手，请根据视频内容做准确总结。\n\n禁用联网工具。",
                 },
                 {
                     "role": "user",
@@ -58,7 +65,7 @@ def summarize_video(filepath: str, prompt: str | None) -> str:
                 },
             ],
             temperature=0.2,
-            timeout=300.0,
+            timeout=request_timeout_seconds,
         )
     except APIStatusError as exc:
         raise HTTPException(
@@ -69,6 +76,8 @@ def summarize_video(filepath: str, prompt: str | None) -> str:
         raise HTTPException(status_code=502, detail=f"Model API request failed: {exc}") from exc
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Model SDK unexpected error: {exc}") from exc
+    finally:
+        await client.close()
 
     data = response.model_dump()
     message = data.get("choices", [{}])[0].get("message", {})
@@ -76,4 +85,3 @@ def summarize_video(filepath: str, prompt: str | None) -> str:
     if not summary:
         raise HTTPException(status_code=502, detail=f"Unexpected model response: {data}")
     return summary
-
