@@ -1,6 +1,6 @@
 # bili-summary-mcp
 
-Minimal FastAPI service for Bilibili video ingest with `yt-dlp`.
+FastAPI service for Bilibili video ingest with `yt-dlp` and multimodal summary via OpenAI-compatible API.
 
 ## Run
 
@@ -9,13 +9,23 @@ uv sync
 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
+## Model Config
+
+Create `.env` in project root:
+
+```env
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_API_KEY=YOUR_API_KEY
+OPENAI_MODEL_NAME=gpt-4.1-mini
+```
+
 ## API
 
 ### Health
 
 - `GET /health`
 
-### Summarize (download-only for now)
+### Summarize
 
 - `POST /summarize`
 - Body:
@@ -27,4 +37,4 @@ uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
 }
 ```
 
-- Response currently contains download metadata and a placeholder summary.
+- Response returns model-generated summary from multimodal API.

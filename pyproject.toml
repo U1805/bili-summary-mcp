@@ -5,6 +5,9 @@ description = "FastAPI service for Bilibili video ingest via yt-dlp"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi==0.116.1",
+    "httpx>=0.28.1",
+    "openai>=2.24.0",
+    "python-dotenv>=1.2.2",
     "uvicorn[standard]==0.35.0",
     "yt-dlp==2025.8.22",
 ]
