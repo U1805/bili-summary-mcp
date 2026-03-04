@@ -2,9 +2,12 @@ from fastapi import FastAPI
 
 from app.core.router import router as core_router
 from app.core.settings import get_settings
+from app.mcp import get_mcp_http_app, register_mcp_lifecycle
 
 app = FastAPI(title="bili-summary-mcp", version="0.1.0")
 app.include_router(core_router)
+app.mount("/mcp", get_mcp_http_app())
+register_mcp_lifecycle(app)
 
 settings = get_settings()
 if settings.qwen.enabled:

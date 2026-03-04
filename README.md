@@ -11,7 +11,7 @@ uv run python -m app.main
 
 ## Model Config (TOML)
 
-Create `config.toml` in project root (you can copy from `config.toml.example`).
+Create `app/config.toml` (you can copy from `app/config.toml.example`).
 
 Server port:
 
@@ -68,3 +68,30 @@ When all `[qwen]` values are set:
 ```
 
 - Response returns model-generated summary from multimodal API.
+
+### MCP Config
+
+Before configuring an agent, start this service first:
+
+```bash
+uv run python -m app.main
+```
+
+Use this MCP endpoint:
+
+- `http://127.0.0.1:8000/mcp/`
+
+Common MCP config examples:
+
+```json
+{
+  "mcpServers": {
+    "bili-summary-mcp": {
+      "transport": "streamable_http",
+      "url": "http://127.0.0.1:8000/mcp/"
+    }
+  }
+}
+```
+
+If your `app/config.toml` sets a custom `[server].port`, replace `8000` accordingly.
