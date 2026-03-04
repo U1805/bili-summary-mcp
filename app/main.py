@@ -11,9 +11,13 @@ from openai import APIConnectionError, APIStatusError, OpenAI
 from pydantic import BaseModel, Field
 import yt_dlp
 
+from app.qwen import register_qwen_lifecycle, router as qwen_router
+
 load_dotenv()
 
 app = FastAPI(title="bili-summary-mcp", version="0.1.0")
+app.include_router(qwen_router)
+register_qwen_lifecycle(app)
 DOWNLOAD_DIR = Path("downloads")
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 DEFAULT_SUMMARY_PROMPT = (
