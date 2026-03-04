@@ -6,18 +6,48 @@ FastAPI service for Bilibili video ingest with `yt-dlp` and multimodal summary v
 
 ```bash
 uv sync
-uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+uv run python -m app.main
 ```
 
-## Model Config
+## Model Config (TOML)
 
-Create `.env` in project root:
+Create `config.toml` in project root (you can copy from `config.toml.example`).
 
-```env
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_API_KEY=YOUR_API_KEY
-OPENAI_MODEL_NAME=gpt-4.1-mini
+Server port:
+
+```toml
+[server]
+port = 8000
 ```
+
+Mode 1: external OpenAI-compatible API
+
+```toml
+[openai]
+base_url = "https://api.openai.com/v1" # optional
+api_key = "YOUR_API_KEY"
+model_name = "gpt-4.1-mini"
+```
+
+Mode 2: local Qwen gateway reuse
+
+```toml
+[qwen]
+email = "YOUR_QWEN_EMAIL"
+password = "YOUR_QWEN_PASSWORD"
+model_name = "qwen3.5-plus"
+
+[qwen.localapi] # optional
+base_url = "http://127.0.0.1:8000/v1"
+api_key = "local-qwen"
+```
+
+When all `[qwen]` values are set:
+- App mounts local `/v1/models` and `/v1/chat/completions`.
+- `main.py` automatically reuses this local OpenAI-compatible interface.
+- Mode 2 automatically overrides Mode 1 (`[openai]`) effective runtime config.
+- Effective `openai.base_url` and `openai.api_key` come from `[qwen.localapi]` (or defaults).
+- Effective `openai.model_name` is `qwen.model_name`.
 
 ## API
 

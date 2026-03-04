@@ -3,7 +3,6 @@ import base64
 import hashlib
 import json
 import mimetypes
-import os
 import time
 import uuid
 from datetime import datetime
@@ -13,12 +12,11 @@ from urllib.parse import urlparse
 
 import httpx
 import oss2
-from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-load_dotenv()
+from app.settings import get_settings
 
 router = APIRouter(tags=["qwen-openai-compatible"])
 
@@ -26,9 +24,6 @@ QWEN_BASE_URL = "https://chat.qwen.ai"
 QWEN_SOURCE = "web"
 QWEN_VERSION = "0.2.9"
 QWEN_TIMEOUT = 120.0
-QWEN_EMAIL_ENV = "QWEN_EMAIL"
-QWEN_PASSWORD_ENV = "QWEN_PASSWORD"
-OPENAI_MODEL_NAME_ENV = "OPENAI_MODEL_NAME"
 
 DEFAULT_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -201,12 +196,16 @@ class QwenSession:
             await self._login()
 
     async def _login(self) -> None:
-        email = os.getenv(QWEN_EMAIL_ENV, "").strip()
-        password = os.getenv(QWEN_PASSWORD_ENV, "")
-        if not email or not password:
+        qwen = get_settings().qwen
+        email = qwen.email.strip()
+        password = qwen.password
+        if not (email and password and qwen.model_name):
             raise HTTPException(
                 status_code=500,
-                detail=f"Missing env vars: {QWEN_EMAIL_ENV}, {QWEN_PASSWORD_ENV}",
+                detail=(
+                    "Missing Qwen config in config.toml. "
+                    "Required keys: [qwen].email, [qwen].password, [qwen].model_name"
+                ),
             )
 
         payload = {"email": email, "password": _sha256_hex(password)}
@@ -747,7 +746,17 @@ async def chat_completions(request: ChatCompletionsRequest) -> Any:
     if not request.messages:
         raise HTTPException(status_code=400, detail="messages is required")
 
-    model = request.model or os.getenv(OPENAI_MODEL_NAME_ENV, "qwen3.5-plus")
+    qwen = get_settings().qwen
+    if not qwen.enabled:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Qwen local OpenAI-compatible gateway is disabled. "
+                "Set [qwen].email, [qwen].password and [qwen].model_name in config.toml."
+            ),
+        )
+
+    model = request.model or qwen.model_name
     composed_prompt = _compose_qwen_prompt(request.messages)
     video_urls = _extract_video_urls(request.messages)
     if not composed_prompt and not video_urls:
@@ -803,6 +812,9 @@ async def chat_completions(request: ChatCompletionsRequest) -> Any:
 
 
 def register_qwen_lifecycle(app: FastAPI) -> None:
+    if not get_settings().qwen.enabled:
+        return
+
     @app.on_event("startup")
     async def _startup_qwen_login() -> None:
         await qwen_session.ensure_login(force=True)

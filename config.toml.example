@@ -1,0 +1,23 @@
+[server]
+port = 8000
+
+[openai]
+# Mode 1: Use an external OpenAI-compatible API.
+# base_url is optional and defaults to https://api.openai.com/v1
+base_url = "https://api.openai.com/v1"
+api_key = ""
+model_name = ""
+
+[qwen]
+# Mode 2: Enable local Qwen OpenAI-compatible gateway (/v1/models, /v1/chat/completions).
+# When all fields are set, app/main.py will automatically use the local mounted
+# OpenAI-compatible interface and map openai.model_name to qwen.model_name.
+# This also overrides Mode 1 [openai] effective runtime config.
+email = ""
+password = ""
+model_name = ""
+
+[qwen.localapi]
+# Optional local gateway overrides used when [qwen] is enabled.
+base_url = "http://127.0.0.1:8000/v1"
+api_key = "local-qwen"

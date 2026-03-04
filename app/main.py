@@ -1,31 +1,29 @@
 import base64
 import mimetypes
-import os
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import urlparse
 
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from openai import APIConnectionError, APIStatusError, OpenAI
 from pydantic import BaseModel, Field
 import yt_dlp
 
-from app.qwen import register_qwen_lifecycle, router as qwen_router
-
-load_dotenv()
+from app.settings import get_settings
 
 app = FastAPI(title="bili-summary-mcp", version="0.1.0")
-app.include_router(qwen_router)
-register_qwen_lifecycle(app)
+settings = get_settings()
+if settings.qwen.enabled:
+    from app.qwen import register_qwen_lifecycle, router as qwen_router
+
+    app.include_router(qwen_router)
+    register_qwen_lifecycle(app)
+
 DOWNLOAD_DIR = Path("downloads")
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 DEFAULT_SUMMARY_PROMPT = (
     "请总结这个视频的核心内容，使用中文输出，包含：主题、关键要点、结论。"
 )
-OPENAI_BASE_URL_ENV = "OPENAI_BASE_URL"
-OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
-OPENAI_MODEL_NAME_ENV = "OPENAI_MODEL_NAME"
 
 
 class SummarizeRequest(BaseModel):
@@ -89,16 +87,18 @@ def download_video(url: str) -> tuple[str, str, Optional[float]]:
 
 
 def summarize_video(filepath: str, prompt: Optional[str]) -> str:
-    base_url = os.getenv(OPENAI_BASE_URL_ENV)
-    api_key = os.getenv(OPENAI_API_KEY_ENV)
-    model_name = os.getenv(OPENAI_MODEL_NAME_ENV)
+    effective_openai = get_settings().effective_openai
+    base_url = effective_openai.base_url
+    api_key = effective_openai.api_key
+    model_name = effective_openai.model_name
 
-    if not base_url or not api_key or not model_name:
+    if not effective_openai.is_configured:
         raise HTTPException(
             status_code=500,
             detail=(
-                "Missing model config in .env. Required keys: "
-                "OPENAI_BASE_URL, OPENAI_API_KEY, OPENAI_MODEL_NAME"
+                "Missing model config in config.toml. Use either "
+                "([openai].api_key + [openai].model_name, [openai].base_url optional) "
+                "or ([qwen].email + [qwen].password + [qwen].model_name)."
             ),
         )
 
@@ -174,3 +174,14 @@ def summarize(req: SummarizeRequest) -> SummarizeResponse:
         filepath=filepath,
         prompt=req.prompt,
     )
+
+
+def run() -> None:
+    import uvicorn
+
+    cfg = get_settings()
+    uvicorn.run("app.main:app", host="0.0.0.0", port=cfg.server.port)
+
+
+if __name__ == "__main__":
+    run()
