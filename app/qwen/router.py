@@ -39,8 +39,7 @@ async def chat_completions(request: ChatCompletionsRequest) -> Any:
             status_code=503,
             detail=(
                 "Qwen local OpenAI-compatible gateway is disabled. "
-                "Set [qwen].email, [qwen].password and video_model in config.toml. "
-                "audio_model is optional."
+                "Set [qwen].email, [qwen].password and [qwen].model_name in config.toml."
             ),
         )
 

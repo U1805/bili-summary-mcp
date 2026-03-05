@@ -6,18 +6,13 @@ port = 8000
 # When timeout is reached, the in-flight LLM request is cancelled.
 timeout_seconds = 300
 
-# Shared model settings (used by both Mode 1 and Mode 2).
-# Required: video_model
-# Optional: audio_model (falls back to video_model when empty)
-video_model = ""
-audio_model = ""
-
 [openai]
 # Mode 1: Use an external OpenAI-compatible API directly.
 # Enabled when qwen.email/qwen.password are empty.
 # base_url can be any OpenAI-compatible provider endpoint.
 base_url = "https://api.openai.com/v1"
 api_key = ""
+model_name = ""
 
 [qwen]
 # Mode 2: Enable local Qwen OpenAI-compatible gateway
@@ -25,13 +20,13 @@ api_key = ""
 # Enabled when both fields below are set.
 # When enabled, Mode 2 overrides [openai] runtime config.
 #
-# Qwen model choice is controlled by top-level video_model/audio_model because
-# only Omni-class Qwen models support audio understanding.
+# In Qwen model, only Omni-class Qwen models support audio understanding.
 # Suggestion:
-# - video_model = "qwen3.5-plus"
-# - audio_model = "qwen3-omni-flash"
+# - model_name = "qwen3.5-plus" for video only
+# - model_name = "qwen3-omni-flash" for video+audio
 email = ""
 password = ""
+model_name = ""
 
 [qwen.localapi]
 # Optional local gateway endpoint exposed by this app when [qwen] is enabled.

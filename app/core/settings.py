@@ -112,20 +112,20 @@ def get_settings() -> AppConfig:
     openai_raw = _read_table(raw, "openai")
     qwen_raw = _read_table(raw, "qwen")
     qwen_localapi_raw = _read_table(qwen_raw, "localapi")
-    root_video_model = _read_str(raw, "video_model")
-    root_audio_model = _read_str(raw, "audio_model") or root_video_model
+    openai_model_name = _read_str(openai_raw, "model_name")
+    qwen_model_name = _read_str(qwen_raw, "model_name")
 
     openai = OpenAIConfig(
         base_url=_read_str(openai_raw, "base_url", DEFAULT_OPENAI_BASE_URL) or DEFAULT_OPENAI_BASE_URL,
         api_key=_read_str(openai_raw, "api_key"),
-        video_model=root_video_model,
-        audio_model=root_audio_model,
+        video_model=openai_model_name,
+        audio_model=openai_model_name,
     )
     qwen = QwenConfig(
         email=_read_str(qwen_raw, "email"),
         password=_read_str(qwen_raw, "password"),
-        video_model=root_video_model,
-        audio_model=root_audio_model,
+        video_model=qwen_model_name,
+        audio_model=qwen_model_name,
     )
     parsed_port = _read_int(raw, "port", DEFAULT_SERVER_PORT)
     port = parsed_port if 1 <= parsed_port <= 65535 else DEFAULT_SERVER_PORT

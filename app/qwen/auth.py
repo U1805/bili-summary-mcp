@@ -52,8 +52,7 @@ class QwenAuthService:
                 status_code=500,
                 detail=(
                     "Missing Qwen config in config.toml. "
-                    "Required keys: [qwen].email, [qwen].password, video_model. "
-                    "audio_model is optional."
+                    "Required keys: [qwen].email, [qwen].password, [qwen].model_name"
                 ),
             )
 

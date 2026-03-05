@@ -28,9 +28,8 @@ async def summarize_video(
             status_code=500,
             detail=(
                 "Missing model config in config.toml. Use either "
-                "([openai].api_key + video_model, [openai].base_url optional) "
-                "or ([qwen].email + [qwen].password + video_model). "
-                "audio_model is optional and defaults to video_model."
+                "([openai].api_key + [openai].model_name, [openai].base_url optional) "
+                "or ([qwen].email + [qwen].password + [qwen].model_name)."
             ),
         )
 
