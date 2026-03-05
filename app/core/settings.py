@@ -15,22 +15,24 @@ CONFIG_FILE_PATH = Path(__file__).resolve().parents[1] / "config.toml"
 class OpenAIConfig:
     base_url: str = DEFAULT_OPENAI_BASE_URL
     api_key: str = ""
-    model_name: str = ""
+    video_model: str = ""
+    audio_model: str = ""
 
     @property
     def is_configured(self) -> bool:
-        return bool(self.api_key and self.model_name)
+        return bool(self.api_key and self.video_model)
 
 
 @dataclass(frozen=True)
 class QwenConfig:
     email: str = ""
     password: str = ""
-    model_name: str = ""
+    video_model: str = ""
+    audio_model: str = ""
 
     @property
     def enabled(self) -> bool:
-        return bool(self.email and self.password and self.model_name)
+        return bool(self.email and self.password and self.video_model)
 
 
 @dataclass(frozen=True)
@@ -58,7 +60,8 @@ class AppConfig:
             return OpenAIConfig(
                 base_url=self.local_openai_base_url,
                 api_key=self.local_openai_api_key,
-                model_name=self.qwen.model_name,
+                video_model=self.qwen.video_model,
+                audio_model=self.qwen.audio_model,
             )
         return self.openai
 
@@ -109,23 +112,25 @@ def get_settings() -> AppConfig:
     openai_raw = _read_table(raw, "openai")
     qwen_raw = _read_table(raw, "qwen")
     qwen_localapi_raw = _read_table(qwen_raw, "localapi")
-    server_raw = _read_table(raw, "server")
-    mcp_raw = _read_table(raw, "mcp")
+    root_video_model = _read_str(raw, "video_model")
+    root_audio_model = _read_str(raw, "audio_model") or root_video_model
 
     openai = OpenAIConfig(
         base_url=_read_str(openai_raw, "base_url", DEFAULT_OPENAI_BASE_URL) or DEFAULT_OPENAI_BASE_URL,
         api_key=_read_str(openai_raw, "api_key"),
-        model_name=_read_str(openai_raw, "model_name"),
+        video_model=root_video_model,
+        audio_model=root_audio_model,
     )
     qwen = QwenConfig(
         email=_read_str(qwen_raw, "email"),
         password=_read_str(qwen_raw, "password"),
-        model_name=_read_str(qwen_raw, "model_name"),
+        video_model=root_video_model,
+        audio_model=root_audio_model,
     )
-    parsed_port = _read_int(server_raw, "port", DEFAULT_SERVER_PORT)
+    parsed_port = _read_int(raw, "port", DEFAULT_SERVER_PORT)
     port = parsed_port if 1 <= parsed_port <= 65535 else DEFAULT_SERVER_PORT
     server = ServerConfig(port=port)
-    parsed_mcp_timeout = _read_float(mcp_raw, "timeout_seconds", DEFAULT_MCP_TIMEOUT_SECONDS)
+    parsed_mcp_timeout = _read_float(raw, "timeout_seconds", DEFAULT_MCP_TIMEOUT_SECONDS)
     mcp = MCPConfig(
         timeout_seconds=parsed_mcp_timeout if parsed_mcp_timeout > 0 else DEFAULT_MCP_TIMEOUT_SECONDS
     )

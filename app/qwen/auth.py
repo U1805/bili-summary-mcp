@@ -47,12 +47,13 @@ class QwenAuthService:
         qwen = get_settings().qwen
         email = qwen.email.strip()
         password = qwen.password
-        if not (email and password and qwen.model_name):
+        if not (email and password and qwen.video_model):
             raise HTTPException(
                 status_code=500,
                 detail=(
                     "Missing Qwen config in config.toml. "
-                    "Required keys: [qwen].email, [qwen].password, [qwen].model_name"
+                    "Required keys: [qwen].email, [qwen].password, video_model. "
+                    "audio_model is optional."
                 ),
             )
 
@@ -82,4 +83,3 @@ class QwenAuthService:
         self._user_id = str(auth.get("id", ""))
         self._expires_at = int(auth.get("expires_at") or 0)
         self._logged_in = True
-

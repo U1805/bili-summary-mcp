@@ -21,15 +21,16 @@ async def summarize_video(
     effective_openai = get_settings().effective_openai
     base_url = effective_openai.base_url
     api_key = effective_openai.api_key
-    model_name = effective_openai.model_name
+    video_model = effective_openai.video_model
 
     if not effective_openai.is_configured:
         raise HTTPException(
             status_code=500,
             detail=(
                 "Missing model config in config.toml. Use either "
-                "([openai].api_key + [openai].model_name, [openai].base_url optional) "
-                "or ([qwen].email + [qwen].password + [qwen].model_name)."
+                "([openai].api_key + video_model, [openai].base_url optional) "
+                "or ([qwen].email + [qwen].password + video_model). "
+                "audio_model is optional and defaults to video_model."
             ),
         )
 
@@ -47,7 +48,7 @@ async def summarize_video(
 
     try:
         response = await client.chat.completions.create(
-            model=model_name,
+            model=video_model,
             messages=[
                 {
                     "role": "system",

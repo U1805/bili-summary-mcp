@@ -13,20 +13,17 @@ uv run python -m app.main
 
 Create `app/config.toml` (you can copy from `app/config.toml.example`).
 
-Server port:
+Top-level runtime config:
 
 ```toml
-[server]
 port = 8000
-```
 
-MCP timeout:
-
-```toml
-[mcp]
 # MCP tool timeout in seconds.
 # When timeout is reached, the server cancels the in-flight LLM request.
 timeout_seconds = 300
+
+video_model = "gpt-4.1-mini"
+audio_model = "" # optional; when empty, it falls back to video_model
 ```
 
 Mode 1: external OpenAI-compatible API
@@ -35,7 +32,6 @@ Mode 1: external OpenAI-compatible API
 [openai]
 base_url = "https://api.openai.com/v1" # optional
 api_key = "YOUR_API_KEY"
-model_name = "gpt-4.1-mini"
 ```
 
 Mode 2: local Qwen gateway reuse
@@ -44,19 +40,18 @@ Mode 2: local Qwen gateway reuse
 [qwen]
 email = "YOUR_QWEN_EMAIL"
 password = "YOUR_QWEN_PASSWORD"
-model_name = "qwen3.5-plus"
 
 [qwen.localapi] # optional
 base_url = "http://127.0.0.1:8000/v1"
 api_key = "local-qwen"
 ```
 
-When all `[qwen]` values are set:
+When `[qwen].email` and `[qwen].password` are set:
 - App mounts local `/v1/models` and `/v1/chat/completions`.
 - `main.py` automatically reuses this local OpenAI-compatible interface.
 - Mode 2 automatically overrides Mode 1 (`[openai]`) effective runtime config.
 - Effective `openai.base_url` and `openai.api_key` come from `[qwen.localapi]` (or defaults).
-- Effective `openai.model_name` is `qwen.model_name`.
+- Effective `openai.video_model` and `openai.audio_model` come from top-level `video_model` and `audio_model` (`audio_model` falls back to `video_model`).
 
 ## API
 
@@ -103,5 +98,5 @@ Common MCP config examples:
 }
 ```
 
-If your `app/config.toml` sets a custom `[server].port`, replace `8000` accordingly.
-If your `app/config.toml` sets `[mcp].timeout_seconds`, MCP `summarize_video` will fail fast at that timeout and cancel the in-flight LLM request.
+If your `app/config.toml` sets a custom `port`, replace `8000` accordingly.
+If your `app/config.toml` sets `timeout_seconds`, MCP `summarize_video` will fail fast at that timeout and cancel the in-flight LLM request.

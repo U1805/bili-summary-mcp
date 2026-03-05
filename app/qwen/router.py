@@ -39,11 +39,12 @@ async def chat_completions(request: ChatCompletionsRequest) -> Any:
             status_code=503,
             detail=(
                 "Qwen local OpenAI-compatible gateway is disabled. "
-                "Set [qwen].email, [qwen].password and [qwen].model_name in config.toml."
+                "Set [qwen].email, [qwen].password and video_model in config.toml. "
+                "audio_model is optional."
             ),
         )
 
-    model = request.model or qwen.model_name
+    model = request.model or qwen.video_model
     composed_prompt = compose_qwen_prompt(request.messages)
     video_urls = extract_video_urls(request.messages)
     if not composed_prompt and not video_urls:
