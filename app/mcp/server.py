@@ -12,7 +12,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.types import ASGIApp
 
 from app.core.settings import get_settings
-from app.core.utils import is_bilibili_url
+from app.core.utils import is_bilibili_url, long_video_skip_message, should_skip_upload_by_duration
 from app.services.summary import summarize_video
 from app.services.video import download_video
 
@@ -111,28 +111,32 @@ async def summarize_video_tool(
     llm_task: asyncio.Task[str] | None = None
     try:
         filepath, title, duration = await run_in_threadpool(download_video, normalized_url)
-        timeout_seconds = get_settings().mcp.timeout_seconds
-        llm_task = asyncio.create_task(
-            summarize_video(
-                filepath=filepath,
-                prompt=normalized_prompt,
-                request_timeout_seconds=timeout_seconds,
+        if should_skip_upload_by_duration(duration):
+            summary = long_video_skip_message(duration)
+            logger.info("mcp summarize_video skipped upload url=%s duration=%s", normalized_url, duration)
+        else:
+            timeout_seconds = get_settings().mcp.timeout_seconds
+            llm_task = asyncio.create_task(
+                summarize_video(
+                    filepath=filepath,
+                    prompt=normalized_prompt,
+                    request_timeout_seconds=timeout_seconds,
+                )
             )
-        )
-        try:
-            summary = await asyncio.wait_for(llm_task, timeout=timeout_seconds)
-        except TimeoutError as exc:
-            llm_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await llm_task
-            logger.error(
-                "mcp summarize_video timeout url=%s timeout_seconds=%s",
-                normalized_url,
-                timeout_seconds,
-            )
-            raise RuntimeError(
-                f"MCP summarize_video timed out after {timeout_seconds:.1f}s; cancelled LLM request"
-            ) from exc
+            try:
+                summary = await asyncio.wait_for(llm_task, timeout=timeout_seconds)
+            except TimeoutError as exc:
+                llm_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await llm_task
+                logger.error(
+                    "mcp summarize_video timeout url=%s timeout_seconds=%s",
+                    normalized_url,
+                    timeout_seconds,
+                )
+                raise RuntimeError(
+                    f"MCP summarize_video timed out after {timeout_seconds:.1f}s; cancelled LLM request"
+                ) from exc
     except asyncio.CancelledError:
         if llm_task is not None and not llm_task.done():
             llm_task.cancel()

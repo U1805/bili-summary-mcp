@@ -6,7 +6,7 @@ from starlette.concurrency import run_in_threadpool
 from app.core.schemas import SummarizeRequest, SummarizeResponse
 from app.services.summary import summarize_video
 from app.services.video import download_video
-from app.core.utils import is_bilibili_url
+from app.core.utils import is_bilibili_url, long_video_skip_message, should_skip_upload_by_duration
 
 router = APIRouter(tags=["summary"])
 logger = logging.getLogger(__name__)
@@ -24,7 +24,11 @@ async def summarize(req: SummarizeRequest) -> SummarizeResponse:
         raise HTTPException(status_code=400, detail="Only Bilibili URLs are supported")
 
     filepath, title, duration = await run_in_threadpool(download_video, req.url)
-    summary = await summarize_video(filepath=filepath, prompt=req.prompt)
+    if should_skip_upload_by_duration(duration):
+        summary = long_video_skip_message(duration)
+        logger.info("summarize skipped upload url=%s duration=%s", req.url, duration)
+    else:
+        summary = await summarize_video(filepath=filepath, prompt=req.prompt)
     logger.info("summarize result url=%s summary=%s", req.url, summary)
 
     return SummarizeResponse(
