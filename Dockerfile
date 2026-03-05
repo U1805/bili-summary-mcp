@@ -17,10 +17,10 @@ COPY --from=ghcr.io/astral-sh/uv:0.8.15 /uv /uvx /usr/local/bin/
 COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-COPY app/ ./
+COPY app/ ./app/
 
 # Create a default config for first run; mount app/config.toml to override.
-RUN if [ ! -f config.toml ]; then cp config.toml.example config.toml; fi \
+RUN if [ ! -f app/config.toml ]; then cp app/config.toml.example app/config.toml; fi \
     && mkdir -p /app/downloads
 
 RUN uv sync --frozen --no-dev --no-install-project
