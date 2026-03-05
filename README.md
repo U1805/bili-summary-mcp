@@ -140,6 +140,7 @@ Main config file: `app/config.toml`
 |---|---|---|
 | `port` | HTTP server port | `8000` |
 | `timeout_seconds` | MCP summarize timeout (seconds) | `300` |
+| `downloader.proxy` | Optional proxy used by `yt-dlp` for Bilibili download (`socks5://...` or `http://...`) | `""` |
 | `openai.base_url` | OpenAI-compatible API base URL | `https://api.openai.com/v1` |
 | `openai.api_key` | API key for provider mode | `""` |
 | `openai.model_name` | Model used for summarization (provider mode) | `""` |

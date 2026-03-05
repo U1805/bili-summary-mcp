@@ -10,6 +10,13 @@ public_host = ""
 # When timeout is reached, the in-flight LLM request is cancelled.
 timeout_seconds = 300
 
+[downloader]
+# Optional proxy used by yt-dlp when downloading Bilibili videos.
+# Supported examples:
+# - "socks5://127.0.0.1:1080"
+# - "http://127.0.0.1:7890"
+proxy = ""
+
 [openai]
 # Mode 1: Use an external OpenAI-compatible API directly.
 # Enabled when qwen.email/qwen.password are empty.

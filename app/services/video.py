@@ -5,11 +5,13 @@ from fastapi import HTTPException
 import yt_dlp
 
 from app.core.constants import DOWNLOAD_DIR
+from app.core.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
 
 def download_video(url: str) -> tuple[str, str, float | None]:
+    proxy = get_settings().downloader.proxy
     ydl_opts = {
         "format": "worstvideo[ext=mp4]+worstaudio[ext=m4a]/worstvideo+worstaudio/worst",
         "outtmpl": str(DOWNLOAD_DIR / "%(id)s.%(ext)s"),
@@ -21,6 +23,8 @@ def download_video(url: str) -> tuple[str, str, float | None]:
         "quiet": True,
         "no_warnings": True,
     }
+    if proxy:
+        ydl_opts["proxy"] = proxy
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

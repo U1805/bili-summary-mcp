@@ -49,11 +49,17 @@ class MCPConfig:
 
 
 @dataclass(frozen=True)
+class DownloaderConfig:
+    proxy: str = ""
+
+
+@dataclass(frozen=True)
 class AppConfig:
     openai: OpenAIConfig
     qwen: QwenConfig
     server: ServerConfig
     mcp: MCPConfig
+    downloader: DownloaderConfig
     local_openai_base_url: str
     local_openai_api_key: str = DEFAULT_LOCAL_OPENAI_API_KEY
 
@@ -130,6 +136,7 @@ def get_settings() -> AppConfig:
     openai_raw = _read_table(raw, "openai")
     qwen_raw = _read_table(raw, "qwen")
     qwen_localapi_raw = _read_table(qwen_raw, "localapi")
+    downloader_raw = _read_table(raw, "downloader")
     openai_model_name = _read_str(openai_raw, "model_name")
     qwen_model_name = _read_str(qwen_raw, "model_name")
 
@@ -155,6 +162,7 @@ def get_settings() -> AppConfig:
     mcp = MCPConfig(
         timeout_seconds=parsed_mcp_timeout if parsed_mcp_timeout > 0 else DEFAULT_MCP_TIMEOUT_SECONDS
     )
+    downloader = DownloaderConfig(proxy=_read_str(downloader_raw, "proxy"))
     default_local_openai_base_url = f"http://127.0.0.1:{server.port}/v1"
     local_base_url = _read_str(qwen_localapi_raw, "base_url", default_local_openai_base_url)
     local_api_key = _read_str(qwen_localapi_raw, "api_key", DEFAULT_LOCAL_OPENAI_API_KEY)
@@ -163,6 +171,7 @@ def get_settings() -> AppConfig:
         qwen=qwen,
         server=server,
         mcp=mcp,
+        downloader=downloader,
         local_openai_base_url=local_base_url or default_local_openai_base_url,
         local_openai_api_key=local_api_key or DEFAULT_LOCAL_OPENAI_API_KEY,
     )
