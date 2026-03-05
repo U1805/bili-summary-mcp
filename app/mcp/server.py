@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import HTTPException
 from fastapi import FastAPI
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.types import ASGIApp
@@ -16,12 +17,32 @@ from app.core.utils import is_bilibili_url, long_video_skip_message, should_skip
 from app.services.summary import summarize_video
 from app.services.video import cleanup_downloaded_video, download_video
 
+
+def _build_transport_security_settings() -> TransportSecuritySettings:
+    allowed_hosts = ["127.0.0.1:*", "localhost:*", "[::1]:*"]
+    allowed_origins = ["http://127.0.0.1:*", "http://localhost:*", "http://[::1]:*"]
+
+    public_host = get_settings().server.public_host.strip().lower()
+
+    if public_host:
+        allowed_hosts.extend([public_host, f"{public_host}:*"])
+        allowed_origins.extend([f"https://{public_host}", f"http://{public_host}"])
+
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=allowed_hosts,
+        allowed_origins=allowed_origins,
+    )
+
+
 mcp_server = FastMCP(
     name="bili-summary-mcp",
     instructions="Summarize Bilibili videos with the existing project workflow.",
+    host="0.0.0.0",
     stateless_http=True,
     json_response=True,
     streamable_http_path="/",
+    transport_security=_build_transport_security_settings(),
 )
 _mcp_http_app = mcp_server.streamable_http_app()
 _mcp_session_manager = mcp_server.session_manager

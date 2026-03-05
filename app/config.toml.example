@@ -2,6 +2,10 @@
 # HTTP listen port for this app.
 port = 8000
 
+# Public host/domain used by MCP transport security allowlist.
+# Example: "xxx.hf.space"
+public_host = ""
+
 # MCP summarize timeout in seconds.
 # When timeout is reached, the in-flight LLM request is cancelled.
 timeout_seconds = 300

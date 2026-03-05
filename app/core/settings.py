@@ -40,6 +40,7 @@ class QwenConfig:
 @dataclass(frozen=True)
 class ServerConfig:
     port: int = DEFAULT_SERVER_PORT
+    public_host: str = ""
 
 
 @dataclass(frozen=True)
@@ -146,7 +147,10 @@ def get_settings() -> AppConfig:
     )
     parsed_port = _read_int(raw, "port", DEFAULT_SERVER_PORT)
     port = parsed_port if 1 <= parsed_port <= 65535 else DEFAULT_SERVER_PORT
-    server = ServerConfig(port=port)
+    server = ServerConfig(
+        port=port,
+        public_host=_read_str(raw, "public_host"),
+    )
     parsed_mcp_timeout = _read_float(raw, "timeout_seconds", DEFAULT_MCP_TIMEOUT_SECONDS)
     mcp = MCPConfig(
         timeout_seconds=parsed_mcp_timeout if parsed_mcp_timeout > 0 else DEFAULT_MCP_TIMEOUT_SECONDS
