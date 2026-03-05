@@ -1,7 +1,12 @@
+import logging
+from pathlib import Path
+
 from fastapi import HTTPException
 import yt_dlp
 
 from app.core.constants import DOWNLOAD_DIR
+
+logger = logging.getLogger(__name__)
 
 
 def download_video(url: str) -> tuple[str, str, float | None]:
@@ -27,4 +32,12 @@ def download_video(url: str) -> tuple[str, str, float | None]:
     title = info.get("title") or "unknown"
     duration = info.get("duration")
     return filepath, title, duration
+
+
+def cleanup_downloaded_video(filepath: str) -> None:
+    try:
+        Path(filepath).unlink(missing_ok=True)
+    except Exception as exc:
+        # Cleanup must not break request flow.
+        logger.warning("failed to cleanup downloaded video filepath=%s error=%s", filepath, exc)
 

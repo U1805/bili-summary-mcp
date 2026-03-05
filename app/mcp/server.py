@@ -14,7 +14,7 @@ from starlette.types import ASGIApp
 from app.core.settings import get_settings
 from app.core.utils import is_bilibili_url, long_video_skip_message, should_skip_upload_by_duration
 from app.services.summary import summarize_video
-from app.services.video import download_video
+from app.services.video import cleanup_downloaded_video, download_video
 
 mcp_server = FastMCP(
     name="bili-summary-mcp",
@@ -38,17 +38,6 @@ class SummarizeVideoToolOutput(BaseModel):
     duration: float | None = Field(
         default=None,
         description="Video duration in seconds from source metadata.",
-    )
-    filepath: str = Field(
-        description="Local relative path of the downloaded video file.",
-        examples=["downloads/BV1A9ABzrEQG.mp4"],
-    )
-    prompt: str | None = Field(
-        default=None,
-        description=(
-            "The effective summarization prompt. "
-            "When null, the server used its default prompt."
-        ),
     )
 
 
@@ -98,7 +87,7 @@ async def summarize_video_tool(
         prompt: Optional custom instruction for the model.
 
     Returns:
-        Structured summary result including summary text, title, duration, and local file path.
+        Structured summary result including summary text, title and duration.
     """
     normalized_url = url.strip()
     logger.info("mcp summarize_video request url=%s", normalized_url)
@@ -109,6 +98,7 @@ async def summarize_video_tool(
         normalized_prompt = None
 
     llm_task: asyncio.Task[str] | None = None
+    filepath = ""
     try:
         filepath, title, duration = await run_in_threadpool(download_video, normalized_url)
         if should_skip_upload_by_duration(duration):
@@ -146,14 +136,15 @@ async def summarize_video_tool(
         raise
     except HTTPException as exc:
         raise RuntimeError(_format_http_exception(exc)) from exc
+    finally:
+        if filepath:
+            await run_in_threadpool(cleanup_downloaded_video, filepath)
     logger.info("mcp summarize_video result url=%s summary=%s", normalized_url, summary)
 
     return SummarizeVideoToolOutput(
         summary=summary,
         title=title,
         duration=duration,
-        filepath=filepath,
-        prompt=normalized_prompt,
     )
 
 

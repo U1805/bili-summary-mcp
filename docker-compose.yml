@@ -8,5 +8,4 @@ services:
     environment:
       TZ: "${TZ:-Asia/Shanghai}"
     volumes:
-      - ./downloads:/app/downloads
       - ./app/config.toml:/app/config.toml:ro
