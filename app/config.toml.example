@@ -1,0 +1,35 @@
+# Service runtime settings
+# HTTP listen port for this app.
+port = 8000
+
+# MCP summarize timeout in seconds.
+# When timeout is reached, the in-flight LLM request is cancelled.
+timeout_seconds = 300
+
+[openai]
+# Mode 1: Use an external OpenAI-compatible API directly.
+# Enabled when qwen.email/qwen.password are empty.
+# base_url can be any OpenAI-compatible provider endpoint.
+base_url = "https://api.openai.com/v1"
+api_key = ""
+model_name = ""
+
+[qwen]
+# Mode 2: Enable local Qwen OpenAI-compatible gateway
+# (/v1/models, /v1/chat/completions).
+# Enabled when both fields below are set.
+# When enabled, Mode 2 overrides [openai] runtime config.
+#
+# In Qwen model, only Omni-class Qwen models support audio understanding.
+# Suggestion:
+# - model_name = "qwen3.5-plus" for video only
+# - model_name = "qwen3-omni-flash" for video+audio
+email = ""
+password = ""
+model_name = ""
+
+[qwen.localapi]
+# Optional local gateway endpoint exposed by this app when [qwen] is enabled.
+# Usually keep defaults unless you change port or need a custom API key.
+base_url = "http://127.0.0.1:8000/v1"
+api_key = "local-qwen"

@@ -1,0 +1,11 @@
+services:
+  bili-summary-mcp:
+    image: "ghcr.io/u1805/bili-summary-mcp:latest"
+    container_name: bili-summary-mcp
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      TZ: "${TZ:-Asia/Shanghai}"
+    volumes:
+      - ./app/config.toml:/app/config.toml:ro
