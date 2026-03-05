@@ -9,7 +9,27 @@ uv sync
 uv run python -m app.main
 ```
 
-## Model Config (TOML)
+## Docker Compose
+
+1. Create config file:
+
+```bash
+cp app/config.toml.example app/config.toml
+```
+
+2. Start service:
+
+```bash
+docker compose up -d
+```
+
+3. Check health:
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+## Model Config
 
 Create `app/config.toml` (you can copy from `app/config.toml.example`).
 
@@ -22,8 +42,7 @@ port = 8000
 # When timeout is reached, the server cancels the in-flight LLM request.
 timeout_seconds = 300
 
-video_model = "gpt-4.1-mini"
-audio_model = "" # optional; when empty, it falls back to video_model
+model_name = "gpt-4.1-mini"
 ```
 
 Mode 1: external OpenAI-compatible API
@@ -47,11 +66,8 @@ api_key = "local-qwen"
 ```
 
 When `[qwen].email` and `[qwen].password` are set:
-- App mounts local `/v1/models` and `/v1/chat/completions`.
-- `main.py` automatically reuses this local OpenAI-compatible interface.
+- App mounts local OpenAI-compatible interface `/v1/models` and `/v1/chat/completions`.
 - Mode 2 automatically overrides Mode 1 (`[openai]`) effective runtime config.
-- Effective `openai.base_url` and `openai.api_key` come from `[qwen.localapi]` (or defaults).
-- Effective `openai.video_model` and `openai.audio_model` come from top-level `video_model` and `audio_model` (`audio_model` falls back to `video_model`).
 
 ## API
 
@@ -75,16 +91,6 @@ When `[qwen].email` and `[qwen].password` are set:
 
 ### MCP Config
 
-Before configuring an agent, start this service first:
-
-```bash
-uv run python -m app.main
-```
-
-Use this MCP endpoint:
-
-- `http://127.0.0.1:8000/mcp/`
-
 Common MCP config examples:
 
 ```json
@@ -97,6 +103,3 @@ Common MCP config examples:
   }
 }
 ```
-
-If your `app/config.toml` sets a custom `port`, replace `8000` accordingly.
-If your `app/config.toml` sets `timeout_seconds`, MCP `summarize_video` will fail fast at that timeout and cancel the in-flight LLM request.

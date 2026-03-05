@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from functools import lru_cache
+import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping, Optional
 import tomllib
+from dotenv.variables import parse_variables
 
 DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_SERVER_PORT = 8000
@@ -96,11 +98,26 @@ def _read_float(data: dict[str, Any], key: str, default: float) -> float:
         return default
 
 
+def _expand_env_placeholders(text: str, env: Mapping[str, Optional[str]]) -> str:
+    return "".join(atom.resolve(env) for atom in parse_variables(text))
+
+
+def _expand_env_in_data(value: Any, env: Mapping[str, Optional[str]]) -> Any:
+    if isinstance(value, str):
+        return _expand_env_placeholders(value, env)
+    if isinstance(value, list):
+        return [_expand_env_in_data(item, env) for item in value]
+    if isinstance(value, dict):
+        return {k: _expand_env_in_data(v, env) for k, v in value.items()}
+    return value
+
+
 def _load_raw_config() -> dict[str, Any]:
     if not CONFIG_FILE_PATH.exists():
         return {}
     with CONFIG_FILE_PATH.open("rb") as fh:
         data = tomllib.load(fh)
+    data = _expand_env_in_data(data, os.environ)
     if not isinstance(data, dict):
         return {}
     return data
